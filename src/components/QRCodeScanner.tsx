@@ -1,28 +1,36 @@
-import React, { useState } from 'react';
-import { QrReader } from 'react-qr-reader';
+import React, { useEffect, useRef } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 const QRCodeScanner: React.FC = () => {
-  const [data, setData] = useState<string | null>(null);
+  const scannerRef = useRef<HTMLDivElement | null>(null);
 
-  return (
-    <div style={{ textAlign: 'center', marginTop: '20px' }}>
-      <h1>QR Code Scanner</h1>
-      <div style={{ width: '300px', margin: '0 auto' }}>
-        <QrReader
-          onResult={(result, error) => {
-            if (result?.text) {
-              setData(result.text);
-            }
-            if (error) {
-              console.error(error);
-            }
-          }}
-          style={{ width: '100%' }} // Aquí está corregido
-        />
-      </div>
-      <p>{data ? `Scanned Data: ${data}` : 'No data scanned yet.'}</p>
-    </div>
-  );
+  useEffect(() => {
+    if (scannerRef.current) {
+      const html5QrCodeScanner = new Html5QrcodeScanner(
+        scannerRef.current.id, // ID del elemento HTML
+        { fps: 10, qrbox: 250 }, // Configuración del escáner
+        false // Verbose: deshabilitado
+      );
+
+      html5QrCodeScanner.render(
+        (decodedText) => {
+          alert(`QR Code scanned: ${decodedText}`);
+        },
+        (errorMessage) => {
+          console.error(errorMessage);
+        }
+      );
+
+      // Devuelve una función sincrónica para limpiar el escáner
+      return () => {
+        html5QrCodeScanner.clear().catch((err) => {
+          console.error("Error clearing scanner:", err);
+        });
+      };
+    }
+  }, []);
+
+  return <div id="reader" ref={scannerRef}></div>;
 };
 
 export default QRCodeScanner;
