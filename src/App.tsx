@@ -1,11 +1,11 @@
-import QRCodeScanner from './components/QRCodeScanner'
+import NFCTransfer from './components/NFCTransfer'
+import './App.css'
 
 function App() {
-
   return (
-    <>
-     <QRCodeScanner/>
-    </>
+    <div className="app">
+      <NFCTransfer />
+    </div>
   )
 }
 
