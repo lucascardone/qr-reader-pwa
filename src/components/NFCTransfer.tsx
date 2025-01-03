@@ -11,21 +11,50 @@ const NFCTransfer: React.FC = () => {
   const startNFCSend = async () => {
     try {
       setIsLoading(true);
-      setStatus('Preparando para enviar...');
+      setStatus('Verificando soporte NFC...');
+      
+      console.log('NDEFReader disponible:', 'NDEFReader' in window);
+      console.log('Objeto window:', window);
       
       if (!('NDEFReader' in window)) {
-        setStatus('Tu dispositivo no soporta NFC');
+        setStatus('Tu navegador no soporta la API Web NFC. Asegúrate de:' + 
+                 '\n1. Usar Chrome en Android' +
+                 '\n2. Tener NFC activado' +
+                 '\n3. Estar en una conexión segura (HTTPS)');
         return;
       }
 
+      setStatus('Iniciando NFC...');
       const ndef = new (window as any).NDEFReader();
+      
+      setStatus('Solicitando permisos NFC...');
+      await ndef.scan();
+
+      setStatus('Intentando escribir mensaje...');
       await ndef.write({
-        records: [{ recordType: "text", data: message }]
+        records: [{ 
+          recordType: "text", 
+          data: message,
+          encoding: "utf-8",
+          lang: "es"
+        }]
+      }).catch((error: any) => {
+        console.error('Error en write:', error);
+        throw error;
       });
+      
       setStatus('¡Mensaje enviado correctamente!');
-    } catch (error) {
-      console.error('Error al enviar:', error);
-      setStatus('Error al enviar el mensaje');
+    } catch (error: any) {
+      console.error('Error detallado:', error);
+      if (error.name === 'NotAllowedError') {
+        setStatus('Permiso denegado para usar NFC');
+      } else if (error.name === 'NotSupportedError') {
+        setStatus('NFC no está soportado o está desactivado en tu dispositivo');
+      } else if (error.name === 'SecurityError') {
+        setStatus('Error de seguridad. Asegúrate de estar usando HTTPS');
+      } else {
+        setStatus(`Error: ${error.name} - ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
