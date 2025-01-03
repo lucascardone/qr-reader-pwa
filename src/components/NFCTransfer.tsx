@@ -13,15 +13,16 @@ const NFCTransfer: React.FC = () => {
       setIsLoading(true);
       setStatus('Preparando para enviar...');
       
-      if ('NDEFWriter' in window) {
-        const writer = new (window as any).NDEFWriter();
-        await writer.write({
-          records: [{ recordType: "text", data: message }]
-        });
-        setStatus('¡Mensaje enviado correctamente!');
-      } else {
+      if (!('NDEFReader' in window)) {
         setStatus('Tu dispositivo no soporta NFC');
+        return;
       }
+
+      const ndef = new (window as any).NDEFReader();
+      await ndef.write({
+        records: [{ recordType: "text", data: message }]
+      });
+      setStatus('¡Mensaje enviado correctamente!');
     } catch (error) {
       console.error('Error al enviar:', error);
       setStatus('Error al enviar el mensaje');
